@@ -42,7 +42,7 @@ configure_elasticsearch(){
 
     sed -i 's/ELASTICSEARCH_HOST/'$ELASTICSEARCH_HOST'/g' /config.sql
     sed -i 's/ELASTICSEARCH_CLUSTER_NAME/'$ELASTICSEARCH_CLUSTER_NAME'/g' /config.sql
-    sed -i 's/WEB_ROOT_PATH/'$WEB_ROOT_PATH'/g' /config.sql
+    sed -i 's|WEB_ROOT_PATH|'$WEB_ROOT_PATH'|g' /config.sql
 }
 
 configure_lumisportal
