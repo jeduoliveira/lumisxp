@@ -1,5 +1,5 @@
 FROM alpine as build_lumisportal
-ENV LUMIS_VERSION 12.2.0.200122-FreeVersion
+ENV LUMIS_VERSION 10.3.1.171215-FreeVersion
 
 WORKDIR /usr/local/lumisportal
 RUN apk -Uuv add zip curl 
@@ -26,7 +26,7 @@ RUN apk -Uuv add curl && \
 FROM azul/zulu-openjdk-centos:11
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
-ENV LUMIS_VERSION 12.2.0.200122
+ENV LUMIS_VERSION 10.3.1.171215
 ENV ES_HOME /usr/share/elasticsearch
 ENV LUMIS_HOME /usr/local/lumisportal
 ENV LUMIS_HOME_WWW ${LUMIS_HOME}/www
