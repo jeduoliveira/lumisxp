@@ -1,5 +1,8 @@
+ARG LUMIS_VERSION=${LUMISVERSION:-12.3.0.200408-FreeVersion}
+
 FROM alpine as build_lumisportal
-ENV LUMIS_VERSION 12.3.0.200408-FreeVersion
+ARG LUMIS_VERSION
+ENV LUMIS_VERSION=${LUMIS_VERSION}
 WORKDIR /usr/local/lumisportal
 RUN apk -Uuv add zip curl 
 #RUN curl https://lumisportal-repo.s3.amazonaws.com/lumisportal_${LUMIS_VERSION}.zip --output lumisportal_${LUMIS_VERSION}.zip 
@@ -11,6 +14,7 @@ ADD ./lumisdata/config ./lumisdata/config
 ADD ./lib/ www/WEB-INF/lib/
     
 FROM alpine as build_tomcat
+ARG LUMIS_VERSION
 ENV TOMCAT_VERSION 9
 ENV TOMCAT_RELEASE 9.0.30 
 RUN apk -Uuv add curl && \
@@ -23,7 +27,7 @@ RUN apk -Uuv add curl && \
 FROM azul/zulu-openjdk-centos:11
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
-ENV LUMIS_VERSION 12.3.0.200408-FreeVersion
+ENV LUMIS_VERSION ${LUMIS_VERSION}
 ENV ES_HOME /usr/share/elasticsearch
 ENV LUMIS_HOME /usr/local/lumisportal
 ENV LUMIS_HOME_WWW ${LUMIS_HOME}/www
