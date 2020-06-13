@@ -16,7 +16,7 @@ ADD ./lib/ www/WEB-INF/lib/
 FROM alpine as build_tomcat
 ARG LUMIS_VERSION
 ENV TOMCAT_VERSION 9
-ENV TOMCAT_RELEASE 9.0.30 
+ENV TOMCAT_RELEASE 9.0.36
 RUN set -ex \
     && apk -Uuv add curl \
     && mkdir -p /usr/local/tomcat \
@@ -43,27 +43,26 @@ ENV PATH=${CATALINA_HOME}/bin:${PATH}
 ENV TOMCAT_NATIVE_LIBDIR=${CATALINA_HOME}/native-jni-lib
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${TOMCAT_NATIVE_LIBDIR}
 
-COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
-WORKDIR ${CATALINA_HOME}
-
-COPY --from=build_tomcat /usr/local/tomcat /usr/local/tomcat
-ADD ./tomcat/bin/ ./bin 
-ADD ./tomcat/conf/ ./conf 
-COPY ./elasticsearch/config/lumis-analysis ${ES_HOME}/config/lumis-analysis 
-
 RUN set -x \
-    && yum install -y mysql \
+    && yum -y install mysql \
     && groupadd elasticsearch \
     && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
-    && mkdir -p ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch \
+    && chown -R elasticsearch:root $ES_HOME \
     && mkdir -p ${LUMIS_HTDOCS} \
-    && ln -s ${ES_HOME}/config/lumis-analysis ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch/lumis-analysis \
+    && yum clean all -y  
+
+COPY --from=build_tomcat /usr/local/tomcat /usr/local/tomcat
+COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
+
+WORKDIR ${CATALINA_HOME}
+
+ADD ./tomcat/bin/ ./bin 
+ADD ./tomcat/conf/ ./conf 
+
+RUN set -x \
     && cp -r ${LUMIS_HOME}/www/lumis* ${LUMIS_HTDOCS} \
-    && find . -name "*.jsp" -exec rm -rf {} \; \
-    && chmod +x ${CATALINA_HOME}/bin/*.sh \
-    && chown -R elasticsearch:root ${ES_HOME}/config/lumis-analysis \
-    && chmod -R 755 ${ES_HOME}/config/lumis-analysis \
-    && chown -R elasticsearch:root $ES_HOME 
+    && find ${LUMIS_HTDOCS} -name "*.jsp" -exec rm -rf {} \; \
+    && chmod +x ${CATALINA_HOME}/bin/*.sh 
 
 VOLUME ${LUMIS_HOME}/lumisdata/data
 VOLUME ${LUMIS_HOME}/lumisdata/shared

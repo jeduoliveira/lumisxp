@@ -5,4 +5,7 @@ VALUES(  '000000000A00000000000A0000100000', 'DEVELOPMENT','lumis.portal.filesys
 
 UPDATE lum_Website set webRootPath='WEB_ROOT_PATH' where name ='default';
 
+UPDATE lum_WebsiteBaseURL set path =null;
+UPDATE lum_WebsiteBaseURL set port=80 where port = 8080;
+
 COMMIT;
