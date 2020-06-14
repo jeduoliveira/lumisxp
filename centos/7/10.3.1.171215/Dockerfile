@@ -15,8 +15,8 @@ ADD ./lib/ www/WEB-INF/lib/
     
 FROM alpine as build_tomcat
 ARG LUMIS_VERSION
-ENV TOMCAT_VERSION 9
-ENV TOMCAT_RELEASE 9.0.30 
+ENV TOMCAT_VERSION 8
+ENV TOMCAT_RELEASE 8.5.56
 RUN set -ex \
     && apk -Uuv add curl \
     && mkdir -p /usr/local/tomcat \
@@ -25,9 +25,12 @@ RUN set -ex \
     && mv apache-tomcat-${TOMCAT_RELEASE}/* /usr/local/tomcat \
     && rm -fr apache-tomcat-*
 
-FROM azul/zulu-openjdk-centos:11
+FROM centos:7
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 ENV LUMIS_VERSION=${LUMIS_VERSION}
 ENV ES_HOME=/usr/share/elasticsearch
 ENV LUMIS_HOME=/usr/local/lumisportal
@@ -43,25 +46,29 @@ ENV PATH=${CATALINA_HOME}/bin:${PATH}
 ENV TOMCAT_NATIVE_LIBDIR=${CATALINA_HOME}/native-jni-lib
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${TOMCAT_NATIVE_LIBDIR}
 
-COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
-WORKDIR ${CATALINA_HOME}
+RUN set -x \
+    && yum -q -y update \
+    && yum -q -y upgrade  \
+    && yum -q -y install mysql java-1.8.0-openjdk \
+    && groupadd elasticsearch \
+    && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
+    && chown -R elasticsearch:root $ES_HOME \
+    && mkdir -p ${LUMIS_HTDOCS} \
+    && yum clean all  \
+    && rm -rf /var/cache/yum
 
 COPY --from=build_tomcat /usr/local/tomcat /usr/local/tomcat
+COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
+
+WORKDIR ${CATALINA_HOME}
+
 ADD ./tomcat/bin/ ./bin 
 ADD ./tomcat/conf/ ./conf 
 
-
 RUN set -x \
-    && yum install -y mysql \
-    && groupadd elasticsearch \
-    && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
-    && mkdir -p ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch \
-    && mkdir -p ${LUMIS_HTDOCS} \
-    && ln -s ${ES_HOME}/config/lumis-analysis ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch/lumis-analysis \
     && cp -r ${LUMIS_HOME}/www/lumis* ${LUMIS_HTDOCS} \
-    && find . -name "*.jsp" -exec rm -rf {} \; \
-    && chmod +x ${CATALINA_HOME}/bin/*.sh \    
-    && chown -R elasticsearch:root $ES_HOME 
+    && find ${LUMIS_HTDOCS} -name "*.jsp" -exec rm -rf {} \; \
+    && chmod +x ${CATALINA_HOME}/bin/*.sh 
 
 VOLUME ${LUMIS_HOME}/lumisdata/data
 VOLUME ${LUMIS_HOME}/lumisdata/shared
