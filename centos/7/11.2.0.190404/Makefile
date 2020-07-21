@@ -3,10 +3,10 @@ build:
 
 
 build-free:
-	@(docker build  -t jeduoliveira/lumisxp:11.2.0.190404-freeversion-centos-7-openjdk-8  .)
+	@(docker build  -t jeduoliveira/lumisxp:11.2.0.190404-freeversion-centos-7-zulu-11 .)
 	
 push-free: build-free
-	docker push jeduoliveira/lumisxp:11.2.0.190404-freeversion-centos-7-openjdk-8
+	docker push jeduoliveira/lumisxp:11.2.0.190404-freeversion-centos-7-zulu-11
 	
 	
 	

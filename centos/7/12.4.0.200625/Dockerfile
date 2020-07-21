@@ -1,4 +1,4 @@
-ARG LUMIS_VERSION=${LUMISVERSION:-11.2.0.190404-FreeVersion}
+ARG LUMIS_VERSION=${LUMISVERSION:-12.4.0.200625-FreeVersion}
 
 FROM alpine as build_lumisportal
 ARG LUMIS_VERSION
@@ -16,7 +16,7 @@ ADD ./lib/ www/WEB-INF/lib/
 FROM alpine as build_tomcat
 ARG LUMIS_VERSION
 ENV TOMCAT_VERSION 9
-ENV TOMCAT_RELEASE 9.0.30
+ENV TOMCAT_RELEASE 9.0.36
 RUN set -ex \
     && apk -Uuv add curl \
     && mkdir -p /usr/local/tomcat \
@@ -49,8 +49,7 @@ RUN set -x \
     && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
     && chown -R elasticsearch:root $ES_HOME \
     && mkdir -p ${LUMIS_HTDOCS} \
-    && yum clean all  \
-    && rm -rf /var/cache/yum 
+    && yum clean all -y  
 
 COPY ./elasticsearch/config/lumis-analysis ${ES_HOME}/config/lumis-analysis 
 
