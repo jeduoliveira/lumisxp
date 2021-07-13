@@ -1,8 +1,4 @@
 #!/bin/bash
-#if [ -n "$CONFIG" ]; then
-#   echo "$CONFIG" > /usr/share/metricbeat/metricbeat.yml
-#fi
-
 set -eo pipefail
 shopt -s nullglob
 
@@ -21,6 +17,8 @@ configure_lumisportal(){
     sed -i 's/LUMIS_SERVER_ID/'$LUMIS_SERVER_ID'/g' $LUMIS_HOME/lumisdata/config/lumisportalconfig.xml
     sed -i 's/LUMIS_DB_MAXIMUM_POOL_SIZE/'$LUMIS_DB_MAXIMUM_POOL_SIZE'/g' $LUMIS_HOME/lumisdata/config/lumishibernate.cfg.xml
     sed -i 's|LUMIS_DATA_PATH|'$LUMIS_HOME'/lumisdata|g' $LUMIS_HOME_WWW/WEB-INF/web.xml
+
+    chmod +x $LUMIS_HOME/setup/*.sh
 }
 
 configure_tomcat() {
@@ -36,20 +34,10 @@ configure_tomcat() {
     cp $LUMIS_HOME/lib/shared/* $CATALINA_HOME/lib/    
 }
 
-configure_elasticsearch(){
-
-    echo "#################################################"
-    echo "# Setting up elasticsearch"
-    echo "#################################################"
-
-    sed -i 's/ELASTICSEARCH_HOST/'$ELASTICSEARCH_HOST'/g' /config.sql
-    sed -i 's/ELASTICSEARCH_CLUSTER_NAME/'$ELASTICSEARCH_CLUSTER_NAME'/g' /config.sql
-    sed -i 's|WEB_ROOT_PATH|'$WEB_ROOT_PATH'|g' /config.sql
-}
 
 configure_lumisportal
 configure_tomcat
-configure_elasticsearch
+
 
 /wait-for-mysql.sh 
 /initialize-lumis.sh

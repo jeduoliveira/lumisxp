@@ -1,4 +1,4 @@
-ARG LUMIS_VERSION=${LUMISVERSION:-12.4.0.200625-FreeVersion}
+ARG LUMIS_VERSION=${LUMISVERSION:-7.0.4.131220}
 
 FROM alpine as build_lumisportal
 ARG LUMIS_VERSION
@@ -9,44 +9,36 @@ RUN set -ex \
     && curl https://lumisportal-repo.s3.amazonaws.com/lumisportal_${LUMIS_VERSION}.zip --output lumisportal_${LUMIS_VERSION}.zip \
     && unzip lumisportal_${LUMIS_VERSION}.zip \
     && rm -f lumisportal_${LUMIS_VERSION}.zip \ 
-    && rm -fr lptf opt .LumisPortalFiles development .classpath .project readme.txt
+    && rm -fr lptf opt .LumisPortalFiles development .classpath .project readme.txt 
+
+
 ADD ./lumisdata/config ./lumisdata/config
 ADD ./lib/ www/WEB-INF/lib/
     
 FROM alpine as build_tomcat
 ARG LUMIS_VERSION
-ENV TOMCAT_VERSION 9
-ENV TOMCAT_RELEASE 9.0.37
+ENV TOMCAT_VERSION 7
+ENV TOMCAT_RELEASE 7.0.109
 RUN set -ex \
     && apk -Uuv add curl \
     && mkdir -p /usr/local/tomcat \
     && curl https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_VERSION}/v${TOMCAT_RELEASE}/bin/apache-tomcat-${TOMCAT_RELEASE}.tar.gz --output apache-tomcat-${TOMCAT_RELEASE}.tar.gz \
     && tar -zxf apache-tomcat-${TOMCAT_RELEASE}.tar.gz \ 
     && mv apache-tomcat-${TOMCAT_RELEASE}/* /usr/local/tomcat \
-    && rm -fr apache-tomcat-* \
-    && rm -fr /usr/local/tomcat/work  /usr/local/tomcat/webapps
+    && rm -fr apache-tomcat-*
 
-FROM azul/zulu-openjdk-centos:11
+FROM centos:7
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
-
-RUN set -x \
-    && yum -y update \
-    && yum -y upgrade \
-    && yum -y install mysql \
-    && yum clean all -y 
-
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 ENV LUMIS_VERSION=${LUMIS_VERSION}
 ENV ES_HOME=/usr/share/elasticsearch
 ENV LUMIS_HOME=/usr/local/lumisportal
 ENV LUMIS_HOME_WWW=${LUMIS_HOME}/www
 ENV LUMIS_HTDOCS=/usr/local/htdocs
 ENV LUMIS_DB_MINIMUM_IDLE=25
-ENV LUMIS_DB_HOST=db
-ENV LUMIS_DB_PORT=3306
-ENV LUMIS_DB_USER=lumisportal
-ENV LUMIS_DB_PASSWORD=lumisportal
-ENV LUMIS_DB_NAME=lumisportal
 ENV LUMIS_DB_MAXIMUM_POOL_SIZE=60
 ENV TOMCAT_AJP_MAX_THREADS=25
 ENV TOMCAT_HTTP_MAX_THREADS=5
@@ -56,40 +48,44 @@ ENV PATH=${CATALINA_HOME}/bin:${PATH}
 ENV TOMCAT_NATIVE_LIBDIR=${CATALINA_HOME}/native-jni-lib
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${TOMCAT_NATIVE_LIBDIR}
 
-RUN set -x \
-    && groupadd elasticsearch \
-    && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
-    && chown -R elasticsearch:root $ES_HOME \
-    && mkdir -p ${LUMIS_HTDOCS} 
+RUN set -x 
+    
+    RUN  yum -q -y install mysql java-1.7.0-openjdk 
+    RUN  mkdir -p ${LUMIS_HTDOCS} 
+    RUN  yum clean all  
+    RUN  rm -rf /var/cache/yum
 
-COPY ./elasticsearch/config/lumis-analysis ${ES_HOME}/config/lumis-analysis 
+WORKDIR /usr/local/lumisportal
+
 COPY --from=build_tomcat /usr/local/tomcat /usr/local/tomcat
 COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
 
+WORKDIR /usr/local/lumisportal/setup
+ENV JAVA_HOME=/usr/lib/jvm/jre-1.7.0
+
+ADD setup/generatesql.sh .
+RUN chmod +x *.sh \
+    && sh generatesql.sh
+
 WORKDIR ${CATALINA_HOME}
 
-COPY ./tomcat/bin/ ./bin 
-COPY ./tomcat/conf/ ./conf 
-COPY docker-entrypoint.sh /
-COPY wait-for-mysql.sh /
-COPY initialize-lumis.sh /
-COPY config.sql /
+ADD ./tomcat/bin/ ./bin 
+ADD ./tomcat/conf/ ./conf 
 
 RUN set -x \
-    && mkdir -p ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch \    
-    && ln -s ${ES_HOME}/config/lumis-analysis ${LUMIS_HOME}/lumisdata/shared/data/elasticsearch/lumis-analysis \
     && cp -r ${LUMIS_HOME}/www/lumis* ${LUMIS_HTDOCS} \
-    && find ${LUMIS_HTDOCS} -name "*.jsp" -exec rm -rf {} \; \    
-    && chown -R elasticsearch:root ${ES_HOME}/config/lumis-analysis \
-    && chmod -R 755 ${ES_HOME}/config/lumis-analysis \
-    && chmod +x ${CATALINA_HOME}/bin/*.sh \
-    && chmod +x ${LUMIS_HOME}/setup/*.sh \
-    && chmod +x /*.sh
+    && find ${LUMIS_HTDOCS} -name "*.jsp" -exec rm -rf {} \; \
+    && chmod +x ${CATALINA_HOME}/bin/*.sh 
 
 VOLUME ${LUMIS_HOME}/lumisdata/data
 VOLUME ${LUMIS_HOME}/lumisdata/shared
-VOLUME ${ES_HOME}/config/lumis-analysis
+
 VOLUME ${LUMIS_HTDOCS}
+
+COPY docker-entrypoint.sh /
+COPY wait-for-mysql.sh /
+COPY initialize-lumis.sh /
+
 
 EXPOSE 8080
 EXPOSE 8009

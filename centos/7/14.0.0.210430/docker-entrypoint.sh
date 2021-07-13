@@ -1,8 +1,4 @@
 #!/bin/bash
-#if [ -n "$CONFIG" ]; then
-#   echo "$CONFIG" > /usr/share/metricbeat/metricbeat.yml
-#fi
-
 set -eo pipefail
 shopt -s nullglob
 
@@ -21,6 +17,8 @@ configure_lumisportal(){
     sed -i 's/LUMIS_SERVER_ID/'$LUMIS_SERVER_ID'/g' $LUMIS_HOME/lumisdata/config/lumisportalconfig.xml
     sed -i 's/LUMIS_DB_MAXIMUM_POOL_SIZE/'$LUMIS_DB_MAXIMUM_POOL_SIZE'/g' $LUMIS_HOME/lumisdata/config/lumishibernate.cfg.xml
     sed -i 's|LUMIS_DATA_PATH|'$LUMIS_HOME'/lumisdata|g' $LUMIS_HOME_WWW/WEB-INF/web.xml
+
+    chmod +x $LUMIS_HOME/setup/*.sh
 }
 
 configure_tomcat() {

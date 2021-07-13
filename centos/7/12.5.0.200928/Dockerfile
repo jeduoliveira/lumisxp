@@ -47,6 +47,7 @@ ENV TOMCAT_NATIVE_LIBDIR=${CATALINA_HOME}/native-jni-lib
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${TOMCAT_NATIVE_LIBDIR}
 
 RUN set -x \
+    && yum -y update \
     && yum -y install mysql \
     && groupadd elasticsearch \
     && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
