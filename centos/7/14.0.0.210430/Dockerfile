@@ -71,7 +71,7 @@ RUN set -x \
     && cp -r ${LUMIS_HOME}/www/lumis* ${LUMIS_HTDOCS} \
     && find ${LUMIS_HTDOCS} -name "*.jsp" -exec rm -rf {} \; \
     && chmod +x ${CATALINA_HOME}/bin/*.sh \
-    && chown -R elasticsearch:root ${ES_HOME}/config/lumis-analysis \
+    && chown -R elasticsearch:elasticsearch ${ES_HOME}/config/lumis-analysis \
     && chmod -R 755 ${ES_HOME}/config/lumis-analysis 
 
 VOLUME ${LUMIS_HOME}/lumisdata/data

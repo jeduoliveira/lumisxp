@@ -1,4 +1,4 @@
-ARG LUMIS_VERSION=${LUMISVERSION:-12.5.0.200928-FreeVersion}
+ARG LUMIS_VERSION=${LUMISVERSION:-12.5.0.200928}
 
 FROM alpine as build_lumisportal
 ARG LUMIS_VERSION
@@ -28,7 +28,7 @@ RUN set -ex \
 
 RUN ls -la /usr/local/tomcat/work
 
-FROM azul/zulu-openjdk-centos:11
+FROM registry.lumis.com.br/global/zulu-openjdk:11-centos7
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
 ENV LUMIS_VERSION=${LUMIS_VERSION}
