@@ -1,9 +1,9 @@
 build:
-	docker build  -t jeduoliveira/lumisxp:14.1.0.210906  --build-arg LUMIS_VERSION=14.1.0.210906 .
+	docker build  -t jeduoliveira/lumisxp:14.1.0.210906-FreeVersion  --build-arg LUMIS_VERSION=14.1.0.210906-FreeVersion .
 
 scan: build
-	docker scan --file Dockerfile jeduoliveira/14.1.0.210906
+	docker scan --file Dockerfile jeduoliveira/14.1.0.210906-FreeVersion
 
 push:  build
-	docker push jeduoliveira/lumisxp:14.1.0.210906
+	docker push jeduoliveira/lumisxp:14.1.0.210906-FreeVersion
 	

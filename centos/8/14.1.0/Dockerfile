@@ -1,4 +1,4 @@
-ARG LUMIS_VERSION=${LUMISVERSION:-14.1.0.210906}
+ARG LUMIS_VERSION=${LUMISVERSION:-14.1.0.210906-FreeVersion}
 
 FROM alpine as build_lumisportal
 ARG LUMIS_VERSION
@@ -28,7 +28,7 @@ RUN set -ex \
 
 RUN ls -la /usr/local/tomcat/work
 
-FROM centos:centos8.4.2105
+FROM centos:8.4.2105
 LABEL maintainer="jeduoliveira81@gmail.com"
 LABEL version="1.0"
 ENV LUMIS_VERSION=${LUMIS_VERSION}
@@ -48,17 +48,17 @@ ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${TOMCAT_NATIVE_LIBDIR}
 
 RUN set -x \
     && yum -y update \
-    && yum upgrade -y \
-    && yum install mysql -y \
-    && yum clean all -y 
+    && yum -y upgrade \
+    && yum -y install mysql \
+    && yum -y clean all 
 
 COPY ./elasticsearch/config/lumis-analysis ${ES_HOME}/config/lumis-analysis 
 COPY --from=build_tomcat /usr/local/tomcat /usr/local/tomcat
 COPY --from=build_lumisportal /usr/local/lumisportal/ /usr/local/lumisportal
 
 RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm \
-    && yum install zulu11-jdk -y \
-    && yum clean all -y 
+    && yum -y install zulu11-jdk \
+    && yum -y clean all 
 
 RUN groupadd elasticsearch \
     && useradd -s /bin/nologin -g elasticsearch -d ${ES_HOME} elasticsearch \
