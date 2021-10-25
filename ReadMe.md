@@ -11,7 +11,6 @@ neste repositório estão os arquivos de definição para criação das imagens 
 
 acessar o diretório correspondente a versão que você deseja customizar e alterar o arquivo dockerfile
 
-
     docker build -t NOMEDAIMAGEM .
 
 ## Versões atendidas
